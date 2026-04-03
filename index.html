@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimension Nav Pro | 个人导航系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <style>
+        :root {
+            /* 基础颜色变量：商务蓝灰风格 */
+            --main-bg: #f4f7fa;
+            --glass-bg: rgba(255, 255, 255, 0.85); /* 默认透明度 */
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --accent-color: #3182ce; /* 专业蓝色 */
+            --danger-color: #e53e3e;
+            --border-radius-base: 12px;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --transition-speed: 0.2s;
+        }
+
+        /* 【新增】增强暗黑模式变量 */
+        [data-theme="dark"] {
+            --main-bg: #1a202c;
+            --glass-bg: rgba(45, 55, 72, 0.9);
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --accent-color: #63b3ed;
+        }
+
+        /* 【新增】暗黑模式下的输入框适配 */
+        [data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea {
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        [data-theme="dark"] .icon-btn, [data-theme="dark"] .op-btn, [data-theme="dark"] .link-icon-box {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+
+        body {
+            background-color: var(--main-bg);
+            background-size: cover; background-position: center; background-attachment: fixed;
+            transition: background var(--transition-speed) ease, color var(--transition-speed);
+            color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh; padding: 20px; margin: 0;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; position: relative;}
+
+        header {
+            display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: var(--glass-bg); backdrop-filter: blur(12px);
+            border-radius: var(--border-radius-base); border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); margin-bottom: 30px; position: sticky; top: 10px; z-index: 1000;
+        }
+
+        .logo { font-size: 1.3rem; font-weight: 800; color: var(--accent-color); letter-spacing: -0.5px; }
+
+        .search-box { flex: 1 1 300px; position: relative; }
+        .search-box input {
+            width: 100%; padding: 10px 15px 10px 40px; border-radius: 8px;
+            border: 1px solid #e2e8f0; background: #fff; outline: none; transition: var(--transition-speed);
+        }
+        .search-box input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); }
+
+        .nav-tools { display: flex; gap: 8px; flex-wrap: wrap;}
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fff; border: 1px solid #e2e8f0; cursor: pointer;
+            color: var(--text-secondary); transition: var(--transition-speed);
+        }
+        .icon-btn:hover { border-color: var(--accent-color); color: var(--accent-color); background: #ebf8ff; }
+
+        @media (max-width: 600px) {
+            header { padding: 15px; flex-direction: column; align-items: stretch;}
+            .search-box { width: 100%;}
+            .nav-tools { justify-content: center; }
+            .links-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
+        }
+
+        .category-group { margin-bottom: 25px; }
+        .category-head { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 10px; cursor: move; border-radius: var(--border-radius-base);
+        }
+        .cat-title-wrap { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;}
+        .category-head h2 { font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary); }
+
+        .links-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+            gap: 12px; min-height: 40px;
+        }
+        .collapsed .links-grid { display: none; }
+
+        .link-card {
+            background: var(--glass-bg); padding: 15px; border-radius: var(--border-radius-base);
+            border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px;
+            position: relative; transition: var(--transition-speed); cursor: pointer;
+        }
+        .link-card:hover { transform: translateY(-3px); border-color: var(--accent-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+        .link-icon-box {
+            width: 44px; height: 44px; border-radius: 10px; background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: var(--accent-color); flex-shrink: 0; overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .link-icon-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .card-ops { 
+            position: absolute; top: -10px; right: -10px; 
+            display: none; gap: 8px; z-index: 10;
+        }
+        .link-card:hover .card-ops { display: flex; }
+        .op-btn { 
+            width: 32px; height: 32px; border-radius: 50%; 
+            background: #fff; color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .op-btn:hover { color: var(--accent-color); border-color: var(--accent-color); background: #ebf8ff;}
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; bottom: 10px; right: 10px; background: #cbd5e0; }
+        .status-online { background: #48bb78; }
+        .status-offline { background: #f56565; }
+
+        #loading-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); z-index: 9999;
+            flex-direction: column; align-items: center; justify-content: center; color: white;
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--accent-color); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;
+        }
+        .modal-content { 
+            background: #fff; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; 
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 85vh; overflow-y: auto;
+        }
+        [data-theme="dark"] .modal-content { background: #2d3748; border: 1px solid rgba(255,255,255,0.1); }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-primary);}
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; box-sizing: border-box; color: var(--text-primary); background: transparent;}
+
+        .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .theme-item { border-radius: 10px; overflow: hidden; cursor: pointer; border: 3px solid transparent; position: relative; aspect-ratio: 16/9; transition: 0.2s; }
+        .theme-item:hover { transform: scale(1.02); }
+        .theme-item.active { border-color: var(--accent-color); }
+        .theme-item img { width: 100%; height: 100%; object-fit: cover; }
+        .theme-item span { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); color: #fff; font-size: 0.75rem; text-align: center; padding: 4px 0; }
+
+        .modal-footer { display: flex; gap: 10px; margin-top: 25px; }
+        .modal-footer button { flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-confirm { background: var(--accent-color); color: #fff; }
+        .btn-cancel { background: #edf2f7; color: #4a5568; }
+        .btn-danger { background: var(--danger-color); color: #fff; }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <p style="margin-top:10px; font-weight:bold;">处理中...</p>
+</div>
+
+<div class="container">
+    <header>
+        <div class="logo">DIMENSION NAV</div>
+        <div class="search-box">
+            <i class="fas fa-search" style="position:absolute; left:15px; top:12px; color:var(--text-secondary)"></i>
+            <input type="text" id="globalSearch" placeholder="搜索坐标或 Ctrl+Z 撤销..." oninput="render()">
+        </div>
+        <div class="nav-tools">
+            <button class="icon-btn" onclick="toggleDarkMode()" title="黑夜/白天"><i class="fas fa-circle-half-stroke"></i></button>
+            <button class="icon-btn btn-undo" id="undoBtn" onclick="undo()" title="撤销 (Ctrl+Z)" disabled><i class="fas fa-rotate-left"></i></button>
+            <button class="icon-btn" onclick="openModal('addCat')" title="新建分类"><i class="fas fa-folder-plus"></i></button>
+            <button class="icon-btn" onclick="openModal('single')" title="新增网址"><i class="fas fa-plus"></i></button>
+            <button class="icon-btn" onclick="openModal('theme')" title="视觉定制"><i class="fas fa-paint-brush"></i></button>
+            <button class="icon-btn" onclick="checkAllStatus()" title="网络测速"><i class="fas fa-gauge-high"></i></button>
+            <button class="icon-btn" onclick="openModal('importExport')" title="同步备份"><i class="fas fa-sync-alt"></i></button>
+            <button class="icon-btn" onclick="resetAllData()" title="恢复默认" style="color:var(--danger-color)"><i class="fas fa-trash-can"></i></button>
+
+<button class="icon-btn" onclick="saveToCloud()" title="上传到 GitHub">
+            <i class="fas fa-cloud-upload-alt"></i>
+        </button>
+        <button class="icon-btn" onclick="syncFromCloud()" title="从 GitHub 拉取">
+            <i class="fas fa-cloud-download-alt"></i>
+        </button>
+        </div>
+    </header>
+
+    <main id="mainGrid"></main>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target==this) closeModal()">
+    <div class="modal-content" id="modalBody" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+    // --- 【网址数据完全保留】 ---
+    const DEFAULT_DATA = [
+        { category: "AI工具", collapsed: false, links: [
+            { id: "ai-1", name: "问小白（DeepSeek）", url: "https://www.wenxiaobai.com/chat/70", icon: "fa-robot", desc: "DeepSeek 镜像" },
+            { id: "ai-2", name: "LiblibAI", url: "https://www.liblib.art/", icon: "fa-image", desc: "AI 绘画模型站" },
+            { id: "ai-3", name: "LMArena", url: "https://lmarena.ai/zh", icon: "fa-bolt", desc: "大模型竞技场" },
+            { id: "ai-4", name: "Sora AI", url: "https://sora2-ai.io/my-videos", icon: "fa-video", desc: "视频生成" },
+            { id: "ai-5", name: "Runway AI", url: "https://runwayml.com/", icon: "fa-film", desc: "视频 AI 工具" },
+            { id: "ai-6", name: "Gemini", url: "https://gemini.google.com/app", icon: "fa-rocket", desc: "Google AI" }
+        ]},
+        { category: "提示词 & AI社区", collapsed: false, links: [
+            { id: "pr-1", name: "PromptPilot", url: "https://promptpilot.com", icon: "fa-compass" },
+            { id: "pr-2", name: "Prompt123", url: "https://prompt123.cn/", icon: "fa-book" }
+        ]},
+        { category: "AI创作工具", collapsed: false, links: [
+            { id: "cr-1", name: "闪剪（AI视频）", url: "https://shanjian.tv/custom-list", icon: "fa-scissors" },
+            { id: "cr-2", name: "AI对口型工具合集", url: "https://zhuanlan.zhihu.com/", icon: "fa-comment" },
+            { id: "cr-3", name: "Vectorizer 图片转SVG", url: "https://vectorizer.com/zh/", icon: "fa-vector-square" }
+        ]},
+        { category: "学习教程", collapsed: false, links: [
+            { id: "ed-1", name: "ComfyUI教程", url: "https://zhuanlan.zhihu.com/p/1987940781227524732", icon: "fa-graduation-cap" },
+            { id: "ed-2", name: "ComfyUI部署指南", url: "https://zhuanlan.zhihu.com/p/2850184981", icon: "fa-server" },
+            { id: "ed-3", name: "Gemini使用指南", url: "https://zhuanlan.zhihu.com/", icon: "fa-lightbulb" }
+        ]},
+        { category: "音乐 & 音频", collapsed: false, links: [
+            { id: "mu-1", name: "AHA Music（识曲）", url: "https://www.aha-music.com/", icon: "fa-music" },
+            { id: "mu-2", name: "Midomi（听歌识曲）", url: "https://www.1nzb.com/", icon: "fa-microphone" },
+            { id: "mu-3", name: "Wandhi音乐", url: "https://music.wandhi.com/", icon: "fa-headphones" },
+            { id: "mu-4", name: "TuneFree", url: "https://pt.sayqz.com/?ref=yinghe.xyz#/", icon: "fa-compact-disc" }
+        ]},
+        { category: "插件 & 浏览器工具", collapsed: false, links: [
+            { id: "pl-1", name: "扩展插件站", url: "https://add.qianqian.club/", icon: "fa-puzzle-piece" },
+            { id: "pl-2", name: "Chrome插件推荐", url: "https://tools.", icon: "fa-chrome" }
+        ]},
+        { category: "资源 & 工具站", collapsed: false, links: [
+            { id: "re-1", name: "剪辑资源库", url: "https://", icon: "fa-folder-open" },
+            { id: "re-2", name: "AI工具合集文章", url: "https://zhuanlan.zhihu.com/", icon: "fa-newspaper" }
+        ]}
+    ];
+
+    const PRESET_THEMES = [
+        { name: "极简白", bg: "", glass: 85, accent: "#3182ce", dark: false },
+        { name: "深邃黑", bg: "", glass: 90, accent: "#63b3ed", dark: true },
+        { name: "青空之愿", bg: "https://pic.imgdb.cn/item/660662999f345e8d032223a2.png", glass: 65, accent: "#3182ce", dark: false },
+        { name: "幻影星海", bg: "https://pic.imgdb.cn/item/646331b20d2dde5777a83d3d.jpg", glass: 50, accent: "#63b3ed", dark: true }
+    ];
+
+    let state = JSON.parse(localStorage.getItem('dimension_nav_pro_v82')) || {
+        navData: DEFAULT_DATA,
+        theme: { customBg: "", glassOpacity: 85, accentColor: "#3182ce", darkMode: false }
+    };
+    
+    let undoStack = [];
+    let isEditMode = false;
+// --- GitHub 同步配置（最终稳健版） ---
+const GH_CONFIG = {
+    token: localStorage.getItem('gh_token') || '', 
+    gistId: '8d38aa2d3c3191df5538b4aea6c2f356', 
+    fileName: 'nav_data.json'
+};
+
+// 身份与 Token 检查函数
+function checkToken() {
+    if (!GH_CONFIG.token) {
+        const userToken = prompt("请输入 GitHub 密钥 (ghp_开头):");
+        if (userToken && userToken.startsWith('ghp_')) {
+            localStorage.setItem('gh_token', userToken);
+            GH_CONFIG.token = userToken;
+            return true;
+        }
+        alert("未输入有效密钥，操作取消");
+        return false;
+    }
+    return true;
+}
+
+// 核心：优化后的下载函数（解决新设备报错）
+async function loadFromCloud() {
+    if (!checkToken()) return;
+    
+    const url = `https://api.github.com/gists/${GH_CONFIG.gistId}`;
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `token ${GH_CONFIG.token}` }
+        });
+
+        if (res.ok) {
+            const gist = await res.json();
+            const content = gist.files[GH_CONFIG.fileName].content;
+            const remoteData = JSON.parse(content);
+            
+            if (remoteData) {
+                // 直接应用云端数据，不进行长度匹配校验
+                state = remoteData; 
+                saveLocal(); // 存入当前浏览器
+                render();    // 刷新页面显示
+                alert("🎉 同步成功！已从云端拉取最新导航");
+            }
+        } else if (res.status === 401) {
+            localStorage.removeItem('gh_token');
+            alert("密钥失效，请刷新页面重新输入");
+        } else {
+            alert("下载失败，请检查云端是否有备份");
+        }
+    } catch (err) {
+        alert("同步出错，请检查网络");
+    }
+}
+
+// 这里的 toggleLoading 如果你代码里没有这个函数，可以先留空或者删掉这一行
+function toggleLoading(show) {
+    const loader = document.getElementById('loading-overlay'); // 假设你有加载动画
+    if(loader) loader.style.display = show ? 'flex' : 'none';
+}
+
+// 【备份到云端】
+async function saveToCloud() {
+    // 先检查有没有钥匙，没有就弹窗，弹窗没填就直接退出
+    if (!checkToken()) return; 
+    
+    if (!confirm("确定将当前配置备份到 GitHub 云端吗？")) return;
+
+    toggleLoading(true);
+    const payload = {
+        files: { [GH_CONFIG.fileName]: { content: JSON.stringify(state, null, 2) } }
+    };
+    try {
+        const res = await fetch(`https://api.github.com/gists/${GH_CONFIG.gistId}`, {
+            method: 'PATCH',
+            headers: { 
+                'Authorization': `token ${GH_CONFIG.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) alert("✅ 备份成功！");
+        else alert("❌ 备份失败，请检查 Token 权限");
+    } catch (e) { alert("网络错误，上传失败"); }
+    finally { toggleLoading(false); }
+}
+
+// 【从云端同步】
+async function syncFromCloud() {
+    toggleLoading(true);
+    try {
+        const res = await fetch(`https://api.github.com/gists/${GH_CONFIG.gistId}`, {
+            headers: { 'Authorization': `token ${GH_CONFIG.token}` }
+        });
+        const data = await res.json();
+        const cloudContent = data.files[GH_CONFIG.fileName].content;
+        const cloudState = JSON.parse(cloudContent);
+        
+        if (!cloudState.navData) {
+            alert("云端数据似乎是空的，请先在电脑端上传");
+            return;
+        }
+
+        if (confirm("已获取云端配置，是否覆盖本地？")) {
+            saveHistory(); // 覆盖前存个备份到撤销栈
+            state = cloudState;
+            localStorage.setItem('dimension_nav_pro_v82', JSON.stringify(state));
+            location.reload(); // 同步后刷新页面应用新配置
+        }
+    } catch (e) { alert("❌ 同步失败，请检查 ID 或网络"); }
+    finally { toggleLoading(false); }
+}
+
+    function saveHistory() {
+        if (undoStack.length > 20) undoStack.shift();
+        undoStack.push(JSON.stringify(state));
+        updateUndoButton();
+    }
+    function undo() {
+        if (undoStack.length === 0) return;
+        state = JSON.parse(undoStack.pop());
+        applySettings();
+        render();
+        updateUndoButton();
+    }
+    function updateUndoButton() { document.getElementById('undoBtn').disabled = undoStack.length === 0; }
+    window.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); } });
+
+    function toggleLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
+
+    // --- 【新增】暗黑模式切换 ---
+    function toggleDarkMode() {
+        saveHistory();
+        state.theme.darkMode = !state.theme.darkMode;
+        applySettings();
+    }
+
+    // --- 【新增】分类重命名修复 ---
+    function renameCat(idx) {
+        const oldName = state.navData[idx].category;
+        const newName = prompt("请输入新的分类分组名称：", oldName);
+        if (newName && newName.trim() !== "" && newName !== oldName) {
+            saveHistory();
+            state.navData[idx].category = newName.trim();
+            saveAndRefresh();
+        }
+    }
+
+    function render() {
+        const grid = document.getElementById('mainGrid');
+        const search = document.getElementById('globalSearch').value.toLowerCase();
+        grid.innerHTML = '';
+
+        let foundResult = false;
+
+        state.navData.forEach((cat, catIdx) => {
+            const filtered = cat.links.filter(l => {
+                const searchStr = (l.name + l.url + (l.desc || '')).toLowerCase();
+                return searchStr.includes(search);
+            });
+
+            if (filtered.length === 0 && search !== "") return;
+            foundResult = true;
+
+            const section = document.createElement('div');
+            section.className = `category-group ${cat.collapsed ? 'collapsed' : ''}`;
+            section.dataset.idx = catIdx;
+            section.innerHTML = `
+                <div class="category-head">
+                    <div class="cat-title-wrap" onclick="toggleCollapse(${catIdx})">
+                        <i class="fas fa-chevron-${cat.collapsed ? 'right' : 'down'}" style="width:15px; color:var(--accent-color)"></i>
+                        <h2>${cat.category} <span style="font-weight:600; font-size:0.8rem; opacity:0.6">(${cat.links.length})</span></h2>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <i class="fas fa-pen op-btn" title="重命名" onclick="renameCat(${catIdx})"></i>
+                        <i class="fas fa-trash-alt op-btn" style="color:var(--danger-color)" title="删除分组" onclick="confirmDeleteCat(${catIdx})"></i>
+                    </div>
+                </div>
+                <div class="links-grid" id="grid-${catIdx}">
+                    ${filtered.map(link => `
+                        <div class="link-card" onclick="handleCardClick(event, '${link.url}')" data-id="${link.id}">
+                            <div class="card-ops">
+                                <div class="op-btn" onclick="event.stopPropagation(); editLink('${link.id}')"><i class="fas fa-edit"></i></div>
+                                <div class="op-btn" style="color:var(--danger-color)" onclick="event.stopPropagation(); confirmDeleteLink('${link.id}', '${link.name.replace(/'/g, "\\'")}')"><i class="fas fa-times"></i></div>
+                            </div>
+                            <div class="link-icon-box">
+                                ${link.icon?.startsWith('fa-') ? `<i class="fas ${link.icon}"></i>` : `<img src="https://favicon.duckduckgo.com/ip3/${new URL(link.url).hostname}.ico" onerror="this.src='https://ui-avatars.com/api/?name=${link.name}&background=3182ce&color=fff'">`}
+                            </div>
+                            <div class="link-info">
+                                <div style="font-weight:700; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${link.name}</div>
+                                <div style="font-size:0.75rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${link.desc || link.url}</div>
+                            </div>
+                            <div class="status-dot" id="dot-${link.id}"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            grid.appendChild(section);
+
+            new Sortable(document.getElementById(`grid-${catIdx}`), {
+                group: 'dimension-shared', animation: 200, 
+                onStart: () => saveHistory(), onEnd: saveOrder
+            });
+        });
+
+        if (!foundResult && search !== "") {
+            grid.innerHTML = `<div style="text-align:center; padding:50px; color:var(--text-secondary)">无匹配的坐标...</div>`;
+        }
+
+        new Sortable(grid, {
+            animation: 250, handle: '.category-head', 
+            onStart: () => saveHistory(), onEnd: saveOrder
+        });
+    }
+
+    function applySettings() {
+        // 应用背景和暗黑模式
+        document.body.style.backgroundImage = state.theme.customBg ? `url('${state.theme.customBg}')` : 'none';
+        document.documentElement.setAttribute('data-theme', state.theme.darkMode ? 'dark' : 'light');
+        document.documentElement.style.setProperty('--accent-color', state.theme.accentColor);
+        
+        // 修正玻璃面板颜色
+        const glassColor = state.theme.darkMode ? '45, 55, 72' : '255, 255, 255';
+        document.documentElement.style.setProperty('--glass-bg', `rgba(${glassColor}, ${state.theme.glassOpacity/100})`);
+        
+        localStorage.setItem('dimension_nav_pro_v82', JSON.stringify(state));
+    }
+
+    function handleCardClick(e, url) {
+        if (isEditMode) return;
+        if (confirm(`即将离开此页面，访问：\n${url}`)) window.open(url, '_blank');
+    }
+
+    function editLink(id) { openModal('single', id); }
+
+    function openModal(type, id = null) {
+        const body = document.getElementById('modalBody');
+        isEditMode = true; 
+
+        if (type === 'addCat') {
+            body.innerHTML = `<h3>新建分类分组</h3><input type="text" id="catName" placeholder="例如：设计资源"><div class="modal-footer"><button class="btn-confirm" onclick="saveCat()">创建</button><button class="btn-cancel" onclick="closeModal()">取消</button></div>`;
+        } else if (type === 'single') {
+            let d = { name: '', url: '', desc: '', cat: state.navData[0]?.category, icon: 'fa-link' };
+            if(id) {
+                state.navData.forEach(c => { const f = c.links.find(l => l.id === id); if(f) d = {...f, cat: c.category}; });
+            }
+            body.innerHTML = `
+                <h3>${id?'编辑坐标':'新增坐标'}</h3>
+                <input type="hidden" id="editId" value="${id||''}">
+                <div class="input-group"><label>名称</label><input type="text" id="inName" value="${d.name}" placeholder="网站名称"></div>
+                <div class="input-group"><label>网址</label><input type="text" id="inUrl" value="${d.url}" placeholder="https://..."></div>
+                <div class="input-group"><label>分类</label><select id="inCat">${state.navData.map(c => `<option ${d.cat===c.category?'selected':''}>${c.category}</option>`).join('')}</select></div>
+                <div class="input-group"><label>描述</label><input type="text" id="inDesc" value="${d.desc}" placeholder="可选，简短描述"></div>
+                <div class="modal-footer"><button class="btn-confirm" onclick="saveLink()">保存坐标</button><button class="btn-cancel" onclick="closeModal()">取消</button></div>
+            `;
+        } else if (type === 'importExport') {
+            body.innerHTML = `<h3>备份与同步</h3><p style="font-size:0.8rem; color:var(--text-secondary)">导出您的所有配置为 JSON 字符串，或粘贴 JSON 导入。</p><textarea id="ioArea" rows="10" style="font-family:monospace; font-size:12px">${JSON.stringify(state, null, 2)}</textarea><div class="modal-footer"><button class="btn-confirm" onclick="importData()">导入(合并)</button><button class="btn-cancel" onclick="closeModal()">关闭</button></div>`;
+        } else if (type === 'theme') {
+            body.innerHTML = `
+                <h3>视觉定制</h3>
+                <label style="font-size:0.85rem; font-weight:600; margin-top:10px; display:block">预置主题</label>
+                <div class="theme-grid">${PRESET_THEMES.map((t, i) => `<div class="theme-item ${t.bg===state.theme.customBg && t.accent===state.theme.accentColor && t.dark===state.theme.darkMode?'active':''}" onclick="applyPreset(${i})"><img src="${t.bg || 'https://pic.imgdb.cn/item/660662999f345e8d032223a2.png'}"><span>${t.name}</span></div>`).join('')}</div>
+                <div class="input-group" style="margin-top:20px"><label>使用自定义背景</label><input type="file" accept="image/*" onchange="handleBgUpload(this)"></div>
+                <div class="input-group"><label>毛玻璃透明度 (${state.theme.glassOpacity}%)</label><input type="range" id="opIn" min="10" max="95" value="${state.theme.glassOpacity}" oninput="adjustGlass(this.value)"></div>
+                <div class="modal-footer"><button class="btn-confirm" onclick="closeModal()">完成设置</button></div>
+            `;
+        }
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function applyPreset(idx) {
+        saveHistory();
+        const p = PRESET_THEMES[idx];
+        state.theme = { customBg: p.bg, glassOpacity: p.glass, accentColor: p.accent, darkMode: p.dark };
+        applySettings();
+        openModal('theme');
+    }
+
+    // --- 【修复】图片上传逻辑，防止大数据读取卡死 ---
+    function handleBgUpload(input) {
+        const file = input.files[0]; 
+        if (!file) return;
+        
+        toggleLoading(true); // 显示处理中状态
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            saveHistory();
+            state.theme.customBg = e.target.result;
+            applySettings();
+            toggleLoading(false); // 完成后关闭加载
+            openModal('theme');
+        };
+        // 增加延时防止主线程瞬间过载导致页面无响应
+        setTimeout(() => reader.readAsDataURL(file), 100);
+    }
+
+    function adjustGlass(v) { state.theme.glassOpacity = v; applySettings(); }
+
+    function saveLink() {
+        const id = document.getElementById('editId').value || Date.now().toString();
+        const name = document.getElementById('inName').value.trim();
+        const url = document.getElementById('inUrl').value.trim();
+        const catName = document.getElementById('inCat').value;
+
+        if(!name || !url) { alert("名称和网址必填"); return;}
+
+        saveHistory();
+        state.navData.forEach(c => c.links = c.links.filter(l => l.id !== id));
+        const target = state.navData.find(c => c.category === catName);
+        target.links.push({ id, name, url: url.includes('://')?url:'https://'+url, desc: document.getElementById('inDesc').value, icon: 'fa-link' });
+        
+        saveAndRefresh();
+    }
+
+    async function checkAllStatus() {
+        toggleLoading(true);
+        document.querySelectorAll('.status-dot').forEach(d => d.className = "status-dot");
+
+        const allLinks = state.navData.flatMap(c => c.links);
+        
+        await Promise.allSettled(allLinks.map(link => {
+            return new Promise(async (resolve, reject) => {
+                const dot = document.getElementById(`dot-${link.id}`);
+                const controller = new AbortController();
+                const tid = setTimeout(() => controller.abort(), 4000);
+
+                try {
+                    await fetch(link.url, { mode: 'no-cors', signal: controller.signal });
+                    if(dot) dot.className = "status-dot status-online";
+                    resolve();
+                } catch(e) {
+                    if(dot) dot.className = "status-dot status-offline";
+                    reject(e);
+                } finally { clearTimeout(tid); }
+            });
+        }));
+        toggleLoading(false);
+    }
+
+    function saveAndRefresh() { localStorage.setItem('dimension_nav_pro_v82', JSON.stringify(state)); render(); closeModal(); }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; isEditMode = false; }
+    
+    function saveCat() {
+        const name = document.getElementById('catName').value.trim();
+        if(name && !state.navData.find(c => c.category === name)) {
+            saveHistory();
+            state.navData.push({ category: name, collapsed: false, links: [] });
+            saveAndRefresh();
+        } else if (name) { alert("此分组名称已存在"); }
+    }
+    
+    function confirmDeleteLink(id, name) {
+        saveHistory();
+        if(confirm(`确定删除此坐标 [${name}] ?`)) {
+            state.navData.forEach(c => c.links = c.links.filter(l => l.id !== id));
+            saveAndRefresh();
+        }
+    }
+    
+    function confirmDeleteCat(idx) {
+        saveHistory();
+        if(confirm(`确定销毁 [${state.navData[idx].category}] 分组及其所有坐标？`)) {
+            state.navData.splice(idx, 1);
+            saveAndRefresh();
+        }
+    }
+
+    function importData() {
+        if(!confirm("确定导入此配置？它将覆盖您的当前数据。")) return;
+        try {
+            state = JSON.parse(document.getElementById('ioArea').value);
+            saveAndRefresh();
+            applySettings();
+        } catch(e) { alert("导入失败，JSON 格式错误。"); }
+    }
+    
+    function saveOrder() {
+        const newNav = [];
+        document.querySelectorAll('.category-group').forEach(group => {
+            const name = group.querySelector('h2').innerText.split(' (')[0].trim();
+            const links = [];
+            group.querySelectorAll('.link-card').forEach(card => {
+                const id = card.dataset.id;
+                state.navData.forEach(c => { const f = c.links.find(l => l.id === id); if(f) links.push(f); });
+            });
+            newNav.push({ category: name, collapsed: group.classList.contains('collapsed'), links });
+        });
+        state.navData = newNav;
+        localStorage.setItem('dimension_nav_pro_v82', JSON.stringify(state));
+    }
+    
+    function toggleCollapse(idx) { saveHistory(); state.navData[idx].collapsed = !state.navData[idx].collapsed; saveAndRefresh(); }
+    function resetAllData() { if(confirm("重置将清空所有数据并恢复为系统默认，确定吗?")) { localStorage.removeItem('dimension_nav_pro_v82'); location.reload(); } }
+
+    window.onload = () => { applySettings(); render(); };
+</script>
+</body>
+</html>
